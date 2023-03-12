@@ -1,16 +1,18 @@
 diff --git a/ldm/models/diffusion/ddim.py b/ldm/models/diffusion/ddim.py
-index c6cfd57..e85583c 100644
+index c6cfd57..afbdfee 100644
 --- a/ldm/models/diffusion/ddim.py
 +++ b/ldm/models/diffusion/ddim.py
-@@ -10,6 +10,7 @@ from ldm.modules.diffusionmodules.util import make_ddim_sampling_parameters, mak
+@@ -9,7 +9,9 @@ from ldm.modules.diffusionmodules.util import make_ddim_sampling_parameters, mak
+ 
  class DDIMSampler(object):
      def __init__(self, model, schedule="linear", device=torch.device("cuda"), **kwargs):
++        print("DDIMSampler being created here")
          super().__init__()
 +        print("DDIMSampler being created here")
          self.model = model
          self.ddpm_num_timesteps = model.num_timesteps
          self.schedule = schedule
-@@ -76,6 +77,8 @@ class DDIMSampler(object):
+@@ -76,6 +78,8 @@ class DDIMSampler(object):
                 unconditional_conditioning=None, # this has to come in the same format as the conditioning, # e.g. as encoded tokens, ...
                 dynamic_threshold=None,
                 ucg_schedule=None,
@@ -19,7 +21,7 @@ index c6cfd57..e85583c 100644
                 **kwargs
                 ):
          if conditioning is not None:
-@@ -95,6 +98,7 @@ class DDIMSampler(object):
+@@ -95,6 +99,7 @@ class DDIMSampler(object):
                  if conditioning.shape[0] != batch_size:
                      print(f"Warning: Got {conditioning.shape[0]} conditionings but batch-size is {batch_size}")
  
@@ -27,7 +29,7 @@ index c6cfd57..e85583c 100644
          self.make_schedule(ddim_num_steps=S, ddim_eta=eta, verbose=verbose)
          # sampling
          C, H, W = shape
-@@ -116,7 +120,9 @@ class DDIMSampler(object):
+@@ -116,7 +121,9 @@ class DDIMSampler(object):
                                                      unconditional_guidance_scale=unconditional_guidance_scale,
                                                      unconditional_conditioning=unconditional_conditioning,
                                                      dynamic_threshold=dynamic_threshold,
@@ -38,7 +40,7 @@ index c6cfd57..e85583c 100644
                                                      )
          return samples, intermediates
  
-@@ -127,7 +133,8 @@ class DDIMSampler(object):
+@@ -127,7 +134,8 @@ class DDIMSampler(object):
                        mask=None, x0=None, img_callback=None, log_every_t=100,
                        temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
                        unconditional_guidance_scale=1., unconditional_conditioning=None, dynamic_threshold=None,
@@ -48,7 +50,7 @@ index c6cfd57..e85583c 100644
          device = self.model.betas.device
          b = shape[0]
          if x_T is None:
-@@ -167,7 +174,7 @@ class DDIMSampler(object):
+@@ -167,7 +175,7 @@ class DDIMSampler(object):
                                        corrector_kwargs=corrector_kwargs,
                                        unconditional_guidance_scale=unconditional_guidance_scale,
                                        unconditional_conditioning=unconditional_conditioning,
@@ -57,7 +59,7 @@ index c6cfd57..e85583c 100644
              img, pred_x0 = outs
              if callback: callback(i)
              if img_callback: img_callback(pred_x0, i)
-@@ -182,7 +189,7 @@ class DDIMSampler(object):
+@@ -182,7 +190,7 @@ class DDIMSampler(object):
      def p_sample_ddim(self, x, c, t, index, repeat_noise=False, use_original_steps=False, quantize_denoised=False,
                        temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
                        unconditional_guidance_scale=1., unconditional_conditioning=None,
@@ -66,7 +68,7 @@ index c6cfd57..e85583c 100644
          b, *_, device = *x.shape, x.device
  
          if unconditional_conditioning is None or unconditional_guidance_scale == 1.:
-@@ -245,7 +252,8 @@ class DDIMSampler(object):
+@@ -245,7 +253,8 @@ class DDIMSampler(object):
  
          # direction pointing to x_t
          dir_xt = (1. - a_prev - sigma_t**2).sqrt() * e_t
