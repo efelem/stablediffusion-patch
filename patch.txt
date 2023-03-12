@@ -79,10 +79,10 @@ index c6cfd57..afbdfee 100644
              noise = torch.nn.functional.dropout(noise, p=noise_dropout)
          x_prev = a_prev.sqrt() * pred_x0 + dir_xt + noise
 diff --git a/ldm/modules/diffusionmodules/util.py b/ldm/modules/diffusionmodules/util.py
-index 637363d..fe554e9 100644
+index 637363d..6175124 100644
 --- a/ldm/modules/diffusionmodules/util.py
 +++ b/ldm/modules/diffusionmodules/util.py
-@@ -264,7 +264,48 @@ class HybridConditioner(nn.Module):
+@@ -264,7 +264,47 @@ class HybridConditioner(nn.Module):
          return {'c_concat': [c_concat], 'c_crossattn': [c_crossattn]}
  
  
@@ -122,7 +122,6 @@ index 637363d..fe554e9 100644
 +        repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(original_batch_size, *((1,) * (len(shape) - 1)))
 +
 +        # Generate noise for the entire batch and return only the noise for the specified index
-+        new_shape = shape.copy()
 +        size_list = list(shape)  # convert to list
 +        size_list[0] = original_batch_size  # change the first dimension to 6
 +        new_shape = torch.Size(size_list)  # create a new torch.Size object with the updated list
