@@ -89,7 +89,7 @@ index 637363d..3732276 100644
 +        ValueError: If target_index is specified and batch size is greater than 1.
 +        ValueError: If target_index is greater than or equal to the batch size.
 +    """
-+
++    print("target_index:{}\nshape:{}".format(target_index,shape))
 +    # Generate noise for the entire batch as before if target_index is not specified
 +    if target_index == -1:
 +        repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
