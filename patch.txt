@@ -1,0 +1,153 @@
+diff --git a/ldm/models/diffusion/ddim.py b/ldm/models/diffusion/ddim.py
+index c6cfd57..c48ed52 100644
+--- a/ldm/models/diffusion/ddim.py
++++ b/ldm/models/diffusion/ddim.py
+@@ -76,6 +76,8 @@ class DDIMSampler(object):
+                unconditional_conditioning=None, # this has to come in the same format as the conditioning, # e.g. as encoded tokens, ...
+                dynamic_threshold=None,
+                ucg_schedule=None,
++               target_index=-1,
++               original_batch_size=None,
+                **kwargs
+                ):
+         if conditioning is not None:
+@@ -116,7 +118,9 @@ class DDIMSampler(object):
+                                                     unconditional_guidance_scale=unconditional_guidance_scale,
+                                                     unconditional_conditioning=unconditional_conditioning,
+                                                     dynamic_threshold=dynamic_threshold,
+-                                                    ucg_schedule=ucg_schedule
++                                                    ucg_schedule=ucg_schedule,
++                                                    target_index=-1,
++                                                    original_batch_size=None,
+                                                     )
+         return samples, intermediates
+ 
+@@ -127,7 +131,7 @@ class DDIMSampler(object):
+                       mask=None, x0=None, img_callback=None, log_every_t=100,
+                       temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
+                       unconditional_guidance_scale=1., unconditional_conditioning=None, dynamic_threshold=None,
+-                      ucg_schedule=None):
++                      ucg_schedule=None, target_index=-1, original_batch_size=None):
+         device = self.model.betas.device
+         b = shape[0]
+         if x_T is None:
+@@ -167,7 +171,7 @@ class DDIMSampler(object):
+                                       corrector_kwargs=corrector_kwargs,
+                                       unconditional_guidance_scale=unconditional_guidance_scale,
+                                       unconditional_conditioning=unconditional_conditioning,
+-                                      dynamic_threshold=dynamic_threshold)
++                                      dynamic_threshold=dynamic_threshold, target_index=-1,original_batch_size=None)
+             img, pred_x0 = outs
+             if callback: callback(i)
+             if img_callback: img_callback(pred_x0, i)
+@@ -182,7 +186,7 @@ class DDIMSampler(object):
+     def p_sample_ddim(self, x, c, t, index, repeat_noise=False, use_original_steps=False, quantize_denoised=False,
+                       temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
+                       unconditional_guidance_scale=1., unconditional_conditioning=None,
+-                      dynamic_threshold=None):
++                      dynamic_threshold=None,target_index=-1,original_batch_size=None):
+         b, *_, device = *x.shape, x.device
+ 
+         if unconditional_conditioning is None or unconditional_guidance_scale == 1.:
+@@ -245,7 +249,7 @@ class DDIMSampler(object):
+ 
+         # direction pointing to x_t
+         dir_xt = (1. - a_prev - sigma_t**2).sqrt() * e_t
+-        noise = sigma_t * noise_like(x.shape, device, repeat_noise) * temperature
++        noise = sigma_t * noise_like(x.shape, device, repeat_noise, target_index=-1, original_batch_size=None) * temperature
+         if noise_dropout > 0.:
+             noise = torch.nn.functional.dropout(noise, p=noise_dropout)
+         x_prev = a_prev.sqrt() * pred_x0 + dir_xt + noise
+diff --git a/ldm/modules/diffusionmodules/util.py b/ldm/modules/diffusionmodules/util.py
+index 637363d..3732276 100644
+--- a/ldm/modules/diffusionmodules/util.py
++++ b/ldm/modules/diffusionmodules/util.py
+@@ -264,7 +264,44 @@ class HybridConditioner(nn.Module):
+         return {'c_concat': [c_concat], 'c_crossattn': [c_crossattn]}
+ 
+ 
+-def noise_like(shape, device, repeat=False):
+-    repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
+-    noise = lambda: torch.randn(shape, device=device)
+-    return repeat_noise() if repeat else noise()
+\ No newline at end of file
++def noise_like(shape, device, repeat=False, target_index=-1, original_batch_size=None):
++    """
++    Generates noise of a given shape with a specified device.
++
++    Args:
++        shape (tuple): The shape of the noise tensor.
++        device (torch.device): The device on which to generate the noise tensor.
++        repeat (bool): Whether to repeat the same noise across the batch dimension.
++        target_index (int): The index of the image in the batch for which to generate noise. Default: -1 (generate noise for the entire batch).
++        original_batch_size (int): The original batch size before sampling from DDIM. This argument is only used if target_index is specified and batch size is 1. Default: None.
++
++    Returns:
++        torch.Tensor: The generated noise tensor.
++
++    Raises:
++        ValueError: If target_index is specified and batch size is greater than 1.
++        ValueError: If target_index is greater than or equal to the batch size.
++    """
++
++    # Generate noise for the entire batch as before if target_index is not specified
++    if target_index == -1:
++        repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
++        noise = lambda: torch.randn(shape, device=device)
++        return repeat_noise() if repeat else noise()
++
++    # Generate noise for a specific image in the batch if batch size is 1
++    elif shape[0] == 1:
++        # Repeat noise for the entire batch but generate separate noise for each image
++        repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(original_batch_size, *((1,) * (len(shape) - 1)))
++
++        # Generate noise for the entire batch and return only the noise for the specified index
++        new_shape = shape.copy()
++        new_shape[0] = original_batch_size
++        noise = lambda: torch.randn(new_shape, device=device)
++        if target_index >= original_batch_size:
++            raise ValueError("target_index must be less than the original batch size")
++        return noise()[target_index, :].unsqueeze(0)
++
++    # Raise an error if target_index is specified and batch size is greater than 1
++    else:
++        raise ValueError("You cannot have target_index set when batch_size > 1")
+\ No newline at end of file
+diff --git a/scripts/txt2img.py b/scripts/txt2img.py
+index 9d955e3..586a731 100644
+--- a/scripts/txt2img.py
++++ b/scripts/txt2img.py
+@@ -199,6 +199,22 @@ def parse_args():
+         action='store_true',
+         help="Use bfloat16",
+     )
++    parser.add_argument(
++        '--original_batch_size',
++        type=int,
++        default=None,
++        help='Original batch size before sampling from DDIM'
++    )
++    parser.add_argument(
++        '--target_index',
++        type=int,
++        default=-1,
++        help='Index of the image in the batch for which to generate noise. Default: -1 (generate noise for the entire batch)'
++    )
++
++
++
++    
+     opt = parser.parse_args()
+     return opt
+ 
+@@ -352,7 +368,9 @@ def main(opt):
+                                                      unconditional_guidance_scale=opt.scale,
+                                                      unconditional_conditioning=uc,
+                                                      eta=opt.ddim_eta,
+-                                                     x_T=start_code)
++                                                     x_T=start_code,
++                                                     target_index=opt.target_index,
++                                                     original_batch_size=opt.original_batch_size)
+ 
+                     x_samples = model.decode_first_stage(samples)
+                     x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
