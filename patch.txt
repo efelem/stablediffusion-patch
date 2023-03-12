@@ -1,5 +1,5 @@
 diff --git a/ldm/models/diffusion/ddim.py b/ldm/models/diffusion/ddim.py
-index c6cfd57..db8843b 100644
+index c6cfd57..afbdfee 100644
 --- a/ldm/models/diffusion/ddim.py
 +++ b/ldm/models/diffusion/ddim.py
 @@ -9,7 +9,9 @@ from ldm.modules.diffusionmodules.util import make_ddim_sampling_parameters, mak
@@ -40,7 +40,7 @@ index c6cfd57..db8843b 100644
                                                      )
          return samples, intermediates
  
-@@ -127,11 +134,36 @@ class DDIMSampler(object):
+@@ -127,7 +134,8 @@ class DDIMSampler(object):
                        mask=None, x0=None, img_callback=None, log_every_t=100,
                        temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
                        unconditional_guidance_scale=1., unconditional_conditioning=None, dynamic_threshold=None,
@@ -50,36 +50,7 @@ index c6cfd57..db8843b 100644
          device = self.model.betas.device
          b = shape[0]
          if x_T is None:
--            img = torch.randn(shape, device=device)
-+            # Generate noise for the entire batch as before if target_index is not specified
-+            print("target shape {}".format(shape))
-+            if target_index == -1:
-+                print("target index not set")
-+                img = torch.randn(shape, device=device)
-+            # Generate noise for a specific image in the batch if batch size is 1
-+            elif shape[0] == 1:
-+                print("reproducing target image{}".format(shape))
-+                if target_index >= original_batch_size:
-+                    raise ValueError("target_index must be less than the original batch size")
-+                # Generate noise for the entire batch and return only the noise for the specified index
-+                size_list = list(shape) 
-+                size_list[0] = original_batch_size 
-+                new_shape = torch.Size(size_list)
-+                print("original shape {}".format(new_shape))
-+                img_tmp = torch.randn(new_shape, device=device)
-+                print(tuple(list(img_tmp[target_index, :].shape)))
-+                print("current shape {}".format(tuple(list(img_tmp[target_index, :].unsqueeze(0).shape))))
-+                # Repeat noise for the entire batch but get only one image
-+                
-+                return img_tmp[target_index, :].unsqueeze(0)
-+            # Raise an error if target_index is specified and batch size is greater than 1
-+            else:
-+                raise ValueError("You cannot have target_index set when batch_size > 1")
-+            
-         else:
-             img = x_T
- 
-@@ -167,7 +199,7 @@ class DDIMSampler(object):
+@@ -167,7 +175,7 @@ class DDIMSampler(object):
                                        corrector_kwargs=corrector_kwargs,
                                        unconditional_guidance_scale=unconditional_guidance_scale,
                                        unconditional_conditioning=unconditional_conditioning,
@@ -88,7 +59,7 @@ index c6cfd57..db8843b 100644
              img, pred_x0 = outs
              if callback: callback(i)
              if img_callback: img_callback(pred_x0, i)
-@@ -182,7 +214,7 @@ class DDIMSampler(object):
+@@ -182,7 +190,7 @@ class DDIMSampler(object):
      def p_sample_ddim(self, x, c, t, index, repeat_noise=False, use_original_steps=False, quantize_denoised=False,
                        temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
                        unconditional_guidance_scale=1., unconditional_conditioning=None,
@@ -97,7 +68,7 @@ index c6cfd57..db8843b 100644
          b, *_, device = *x.shape, x.device
  
          if unconditional_conditioning is None or unconditional_guidance_scale == 1.:
-@@ -245,7 +277,8 @@ class DDIMSampler(object):
+@@ -245,7 +253,8 @@ class DDIMSampler(object):
  
          # direction pointing to x_t
          dir_xt = (1. - a_prev - sigma_t**2).sqrt() * e_t
