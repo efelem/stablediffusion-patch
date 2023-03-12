@@ -1,5 +1,5 @@
 diff --git a/ldm/models/diffusion/ddim.py b/ldm/models/diffusion/ddim.py
-index c6cfd57..c48ed52 100644
+index c6cfd57..1e3c3e9 100644
 --- a/ldm/models/diffusion/ddim.py
 +++ b/ldm/models/diffusion/ddim.py
 @@ -76,6 +76,8 @@ class DDIMSampler(object):
@@ -11,36 +11,45 @@ index c6cfd57..c48ed52 100644
                 **kwargs
                 ):
          if conditioning is not None:
-@@ -116,7 +118,9 @@ class DDIMSampler(object):
+@@ -95,6 +97,7 @@ class DDIMSampler(object):
+                 if conditioning.shape[0] != batch_size:
+                     print(f"Warning: Got {conditioning.shape[0]} conditionings but batch-size is {batch_size}")
+ 
++        print("Sampling here")
+         self.make_schedule(ddim_num_steps=S, ddim_eta=eta, verbose=verbose)
+         # sampling
+         C, H, W = shape
+@@ -116,7 +119,9 @@ class DDIMSampler(object):
                                                      unconditional_guidance_scale=unconditional_guidance_scale,
                                                      unconditional_conditioning=unconditional_conditioning,
                                                      dynamic_threshold=dynamic_threshold,
 -                                                    ucg_schedule=ucg_schedule
 +                                                    ucg_schedule=ucg_schedule,
-+                                                    target_index=-1,
-+                                                    original_batch_size=None,
++                                                    target_index=target_index,
++                                                    original_batch_size=original_batch_size,
                                                      )
          return samples, intermediates
  
-@@ -127,7 +131,7 @@ class DDIMSampler(object):
+@@ -127,7 +132,8 @@ class DDIMSampler(object):
                        mask=None, x0=None, img_callback=None, log_every_t=100,
                        temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
                        unconditional_guidance_scale=1., unconditional_conditioning=None, dynamic_threshold=None,
 -                      ucg_schedule=None):
 +                      ucg_schedule=None, target_index=-1, original_batch_size=None):
++        print("DDIM sampling")
          device = self.model.betas.device
          b = shape[0]
          if x_T is None:
-@@ -167,7 +171,7 @@ class DDIMSampler(object):
+@@ -167,7 +173,7 @@ class DDIMSampler(object):
                                        corrector_kwargs=corrector_kwargs,
                                        unconditional_guidance_scale=unconditional_guidance_scale,
                                        unconditional_conditioning=unconditional_conditioning,
 -                                      dynamic_threshold=dynamic_threshold)
-+                                      dynamic_threshold=dynamic_threshold, target_index=-1,original_batch_size=None)
++                                      dynamic_threshold=dynamic_threshold, target_index=target_index,original_batch_size=original_batch_size)
              img, pred_x0 = outs
              if callback: callback(i)
              if img_callback: img_callback(pred_x0, i)
-@@ -182,7 +186,7 @@ class DDIMSampler(object):
+@@ -182,7 +188,7 @@ class DDIMSampler(object):
      def p_sample_ddim(self, x, c, t, index, repeat_noise=False, use_original_steps=False, quantize_denoised=False,
                        temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
                        unconditional_guidance_scale=1., unconditional_conditioning=None,
@@ -49,12 +58,13 @@ index c6cfd57..c48ed52 100644
          b, *_, device = *x.shape, x.device
  
          if unconditional_conditioning is None or unconditional_guidance_scale == 1.:
-@@ -245,7 +249,7 @@ class DDIMSampler(object):
+@@ -245,7 +251,8 @@ class DDIMSampler(object):
  
          # direction pointing to x_t
          dir_xt = (1. - a_prev - sigma_t**2).sqrt() * e_t
 -        noise = sigma_t * noise_like(x.shape, device, repeat_noise) * temperature
-+        noise = sigma_t * noise_like(x.shape, device, repeat_noise, target_index=-1, original_batch_size=None) * temperature
++        print("nois_like called here")
++        noise = sigma_t * noise_like(x.shape, device, repeat_noise, target_index=target_index, original_batch_size=original_batch_size) * temperature
          if noise_dropout > 0.:
              noise = torch.nn.functional.dropout(noise, p=noise_dropout)
          x_prev = a_prev.sqrt() * pred_x0 + dir_xt + noise
@@ -89,7 +99,7 @@ index 637363d..3732276 100644
 +        ValueError: If target_index is specified and batch size is greater than 1.
 +        ValueError: If target_index is greater than or equal to the batch size.
 +    """
-+    print("target_index:{}\nshape:{}".format(target_index,shape))
++
 +    # Generate noise for the entire batch as before if target_index is not specified
 +    if target_index == -1:
 +        repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
@@ -136,7 +146,7 @@ index 9d955e3..586a731 100644
 +
 +
 +
-+    print("Printing")
++    
      opt = parser.parse_args()
      return opt
  
