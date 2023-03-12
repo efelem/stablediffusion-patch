@@ -134,18 +134,10 @@ index 637363d..3732276 100644
 +        raise ValueError("You cannot have target_index set when batch_size > 1")
 \ No newline at end of file
 diff --git a/scripts/txt2img.py b/scripts/txt2img.py
-index 9d955e3..cbc53ff 100644
+index 9d955e3..2744bb3 100644
 --- a/scripts/txt2img.py
 +++ b/scripts/txt2img.py
-@@ -15,6 +15,7 @@ from imwatermark import WatermarkEncoder
- 
- from ldm.util import instantiate_from_config
- from ldm.models.diffusion.ddim import DDIMSampler
-+print(DDIMSampler.__file__)
- from ldm.models.diffusion.plms import PLMSSampler
- from ldm.models.diffusion.dpm_solver import DPMSolverSampler
- 
-@@ -199,6 +200,22 @@ def parse_args():
+@@ -199,6 +199,22 @@ def parse_args():
          action='store_true',
          help="Use bfloat16",
      )
@@ -168,7 +160,7 @@ index 9d955e3..cbc53ff 100644
      opt = parser.parse_args()
      return opt
  
-@@ -219,10 +236,13 @@ def main(opt):
+@@ -219,10 +235,14 @@ def main(opt):
      model = load_model_from_config(config, f"{opt.ckpt}", device)
  
      if opt.plms:
@@ -177,6 +169,7 @@ index 9d955e3..cbc53ff 100644
      elif opt.dpm:
 +        print("DPMSolverSampler")
          sampler = DPMSolverSampler(model, device=device)
++        print(sampler.__file__)
      else:
 +        print("DDIMSampler2")
          sampler = DDIMSampler(model, device=device)
