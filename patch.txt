@@ -124,7 +124,7 @@ index 637363d..3732276 100644
 +        raise ValueError("You cannot have target_index set when batch_size > 1")
 \ No newline at end of file
 diff --git a/scripts/txt2img.py b/scripts/txt2img.py
-index 9d955e3..586a731 100644
+index 9d955e3..0d714dc 100644
 --- a/scripts/txt2img.py
 +++ b/scripts/txt2img.py
 @@ -199,6 +199,22 @@ def parse_args():
@@ -150,7 +150,21 @@ index 9d955e3..586a731 100644
      opt = parser.parse_args()
      return opt
  
-@@ -352,7 +368,9 @@ def main(opt):
+@@ -219,10 +235,13 @@ def main(opt):
+     model = load_model_from_config(config, f"{opt.ckpt}", device)
+ 
+     if opt.plms:
++        print("PLMSSampler")
+         sampler = PLMSSampler(model, device=device)
+     elif opt.dpm:
++        print("DPMSolverSampler")
+         sampler = DPMSolverSampler(model, device=device)
+     else:
++        print("DDIMSampler")
+         sampler = DDIMSampler(model, device=device)
+ 
+     os.makedirs(opt.outdir, exist_ok=True)
+@@ -352,7 +371,9 @@ def main(opt):
                                                       unconditional_guidance_scale=opt.scale,
                                                       unconditional_conditioning=uc,
                                                       eta=opt.ddim_eta,
