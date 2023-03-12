@@ -132,7 +132,7 @@ index 637363d..3732276 100644
 +        raise ValueError("You cannot have target_index set when batch_size > 1")
 \ No newline at end of file
 diff --git a/scripts/txt2img.py b/scripts/txt2img.py
-index 9d955e3..0d714dc 100644
+index 9d955e3..07a8dae 100644
 --- a/scripts/txt2img.py
 +++ b/scripts/txt2img.py
 @@ -199,6 +199,22 @@ def parse_args():
@@ -168,7 +168,7 @@ index 9d955e3..0d714dc 100644
 +        print("DPMSolverSampler")
          sampler = DPMSolverSampler(model, device=device)
      else:
-+        print("DDIMSampler")
++        print("DDIMSampler2")
          sampler = DDIMSampler(model, device=device)
  
      os.makedirs(opt.outdir, exist_ok=True)
