@@ -1,5 +1,5 @@
 diff --git a/ldm/models/diffusion/ddim.py b/ldm/models/diffusion/ddim.py
-index c6cfd57..56223dd 100644
+index c6cfd57..80c25e2 100644
 --- a/ldm/models/diffusion/ddim.py
 +++ b/ldm/models/diffusion/ddim.py
 @@ -9,7 +9,9 @@ from ldm.modules.diffusionmodules.util import make_ddim_sampling_parameters, mak
@@ -67,7 +67,7 @@ index c6cfd57..56223dd 100644
 +                new_shape = torch.Size(size_list)
 +                print("original shape {}".format(new_shape))
 +                img_tmp = torch.randn(new_shape, device=device)
-+                print(img_tmp[target_index, :])
++                print(img_tmp[target_index, :].shape)
 +                print("current shape".format(img_tmp[target_index, :].unsqueeze(0).shape))
 +                # Repeat noise for the entire batch but get only one image
 +                
