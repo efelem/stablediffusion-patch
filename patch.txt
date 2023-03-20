@@ -464,12 +464,13 @@ index 9d955e3..3ed9ea1 100644
      opt = parse_args()
 diff --git a/scripts/websocket.py b/scripts/websocket.py
 new file mode 100644
-index 0000000..57235f1
+index 0000000..9b54cbe
 --- /dev/null
 +++ b/scripts/websocket.py
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,78 @@
 +from flask import Flask
 +from flask_socketio import SocketIO, send
++from flask_cors import CORS
 +from txt2img import txt2img
 +from argparse import Namespace
 +from argparse import ArgumentParser, Namespace
@@ -510,7 +511,8 @@ index 0000000..57235f1
 +    txt2img(args)
 +
 +app = Flask(__name__)
-+socketio = SocketIO(app)
++#app.config["SECRET_KEY"] = "nCt9dIHxmiippDbcm5WlsV9Lk3MB0k"
++socketio = SocketIO(app, cors_allowed_origins="*")
 +
 +# Wrap the main function to accept the seed parameter and return the generated image
 +def generate_images(seed,prompt):
