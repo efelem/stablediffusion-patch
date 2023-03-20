@@ -464,13 +464,12 @@ index 9d955e3..3ed9ea1 100644
      opt = parse_args()
 diff --git a/scripts/websocket.py b/scripts/websocket.py
 new file mode 100644
-index 0000000..9b54cbe
+index 0000000..8052c3b
 --- /dev/null
 +++ b/scripts/websocket.py
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,77 @@
 +from flask import Flask
 +from flask_socketio import SocketIO, send
-+from flask_cors import CORS
 +from txt2img import txt2img
 +from argparse import Namespace
 +from argparse import ArgumentParser, Namespace
