@@ -462,3 +462,86 @@ index 9d955e3..15c0139 100644
  
  if __name__ == "__main__":
      opt = parse_args()
+diff --git a/scripts/webrtc_txt2img.py b/scripts/webrtc_txt2img.py
+new file mode 100644
+index 0000000..c177c1b
+--- /dev/null
++++ b/scripts/webrtc_txt2img.py
+@@ -0,0 +1,76 @@
++from flask import Flask
++from flask_socketio import SocketIO, send
++from txt2img import txt2img
++from argparse import Namespace
++from argparse import ArgumentParser, Namespace
++
++def run_txt2img(ckpt, outdir, H, W, steps, n_iter, device, n_samples, seed, prompt, original_batch_size, target_index, negative_prompt):
++    args = Namespace(
++        ckpt=ckpt,
++        outdir=outdir,
++        H=int(H),
++        W=int(W),
++        steps=int(steps),
++        n_iter=int(n_iter),
++        device=device,
++        n_samples=int(n_samples),
++        seed=int(seed),
++        prompt=prompt,
++        original_batch_size=int(original_batch_size),
++        target_index=int(target_index),
++        negative_prompt=negative_prompt,
++        # Set other parameters to their default values or your desired values
++        plms=False,
++        dpm=False,
++        fixed_code=False,
++        ddim_eta=0.0,
++        C=4,
++        f=8,
++        n_rows=0,
++        scale=7.0,
++        from_file=None,
++        config="configs/stable-diffusion/v2-inference.yaml",
++        precision="autocast",
++        repeat=1,
++        torchscript=False,
++        ipex=False,
++        bf16=False
++    )
++
++    txt2img(args)
++
++app = Flask(__name__)
++socketio = SocketIO(app)
++
++# Wrap the main function to accept the seed parameter and return the generated image
++def generate_images(seed):
++    imgs = run_txt2img(
++        ckpt="/models/$MODEL/model.ckpt",
++        outdir="$DEEPSQUARE_OUTPUT",
++        H="$HEIGHT",
++        W="$WIDTH",
++        steps="$STEPS",
++        n_iter="$ITER",
++        device="cuda",
++        n_samples="$SAMPLES",
++        seed=seed,
++        prompt="$PROMPT",
++        original_batch_size="$ORIGINAL_BATCH_SIZE",
++        target_index="$TARGET_INDEX",
++        negative_prompt="$NEGATIVE_PROMPT"
++    )
++    return imgs
++
++# The WebSocket event for streaming the generated image
++@socketio.on('request_image')
++def stream_images(seed):
++    imgs = generate_images(seed)
++    for img in imgs:
++        socketio.emit('image', img, binary=True)
++
++if __name__ == "__main__":
++    parser = ArgumentParser()
++    parser.add_argument('-p', '--port', default=5000, type=int,
++                        help='Port to run the server on (default: 5000)')
++    args = parser.parse_args()
++    socketio.run(app, host='0.0.0.0', port=args.port)
+\ No newline at end of file
