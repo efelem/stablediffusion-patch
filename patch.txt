@@ -161,7 +161,7 @@ index 637363d..6175124 100644
 +    
 \ No newline at end of file
 diff --git a/scripts/txt2img.py b/scripts/txt2img.py
-index 9d955e3..15c0139 100644
+index 9d955e3..3ed9ea1 100644
 --- a/scripts/txt2img.py
 +++ b/scripts/txt2img.py
 @@ -13,11 +13,18 @@ from torch import autocast
@@ -306,8 +306,8 @@ index 9d955e3..15c0139 100644
 +        print("DDIMSampler2")
 +        sampler = DDIMSampler(model, device=device)
 +
-+    os.makedirs(opt.outdir, exist_ok=True)
-+    outpath = opt.outdir
++    #os.makedirs(opt.outdir, exist_ok=True)
++    #outpath = opt.outdir
 +
 +    print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
 +    wm = "SDV2"
@@ -330,11 +330,11 @@ index 9d955e3..15c0139 100644
 +
 +    negative_prompt = opt.negative_prompt
 +    print("Negative prompts: {}".format(negative_prompt))
-+    sample_path = os.path.join(outpath, "samples")
-+    os.makedirs(sample_path, exist_ok=True)
++    #sample_path = os.path.join(outpath, "samples")
++    #os.makedirs(sample_path, exist_ok=True)
 +    sample_count = 0
-+    base_count = len(os.listdir(sample_path))
-+    grid_count = len(os.listdir(outpath)) - 1
++    #base_count = len(os.listdir(sample_path))
++    #grid_count = len(os.listdir(outpath)) - 1
 +
 +    start_code = None
 +    if opt.fixed_code:
@@ -454,7 +454,7 @@ index 9d955e3..15c0139 100644
 +                        img_buffer.seek(0)
 +                        img_data = img_buffer.getvalue()
 +                        all_samples.append(img_data)
-+                        base_count += 1
++                        #base_count += 1
 +                        sample_count += 1
 +
 +    return all_samples
@@ -462,11 +462,11 @@ index 9d955e3..15c0139 100644
  
  if __name__ == "__main__":
      opt = parse_args()
-diff --git a/scripts/webrtc_txt2img.py b/scripts/webrtc_txt2img.py
+diff --git a/scripts/websocket.py b/scripts/websocket.py
 new file mode 100644
-index 0000000..c177c1b
+index 0000000..33c93f5
 --- /dev/null
-+++ b/scripts/webrtc_txt2img.py
++++ b/scripts/websocket.py
 @@ -0,0 +1,76 @@
 +from flask import Flask
 +from flask_socketio import SocketIO, send
@@ -513,21 +513,21 @@ index 0000000..c177c1b
 +socketio = SocketIO(app)
 +
 +# Wrap the main function to accept the seed parameter and return the generated image
-+def generate_images(seed):
++def generate_images(seed,prompt):
 +    imgs = run_txt2img(
 +        ckpt="/models/$MODEL/model.ckpt",
 +        outdir="$DEEPSQUARE_OUTPUT",
-+        H="$HEIGHT",
-+        W="$WIDTH",
-+        steps="$STEPS",
-+        n_iter="$ITER",
++        H=768,
++        W=768,
++        steps=6,
++        n_iter=1,
 +        device="cuda",
-+        n_samples="$SAMPLES",
++        n_samples=4,
 +        seed=seed,
-+        prompt="$PROMPT",
-+        original_batch_size="$ORIGINAL_BATCH_SIZE",
-+        target_index="$TARGET_INDEX",
-+        negative_prompt="$NEGATIVE_PROMPT"
++        prompt="a small dog astronaut lost in space",
++        original_batch_size=-1,
++        target_index=-1,
++        negative_prompt="ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, ugly, blurry, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, out of frame, ugly, extra limbs, bad anatomy, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, mutated hands, fused fingers, too many fingers, long neck"
 +    )
 +    return imgs
 +
