@@ -464,7 +464,7 @@ index 9d955e3..3ed9ea1 100644
      opt = parse_args()
 diff --git a/scripts/websocket.py b/scripts/websocket.py
 new file mode 100644
-index 0000000..8052c3b
+index 0000000..2c153ed
 --- /dev/null
 +++ b/scripts/websocket.py
 @@ -0,0 +1,77 @@
@@ -516,8 +516,8 @@ index 0000000..8052c3b
 +# Wrap the main function to accept the seed parameter and return the generated image
 +def generate_images(seed,prompt):
 +    imgs = run_txt2img(
-+        ckpt="/models/$MODEL/model.ckpt",
-+        outdir="$DEEPSQUARE_OUTPUT",
++        ckpt="/models/sd-2-1/model.ckpt",
++        outdir="/cache/",
 +        H=768,
 +        W=768,
 +        steps=6,
