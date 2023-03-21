@@ -469,7 +469,7 @@ index 9d955e3..8dbcc15 100644
      opt = parse_args()
 diff --git a/scripts/websocket.py b/scripts/websocket.py
 new file mode 100644
-index 0000000..b73d919
+index 0000000..de5a532
 --- /dev/null
 +++ b/scripts/websocket.py
 @@ -0,0 +1,77 @@
@@ -519,16 +519,16 @@ index 0000000..b73d919
 +socketio = SocketIO(app, cors_allowed_origins="*")
 +
 +# Wrap the main function to accept the seed parameter and return the generated image
-+def generate_images(seed,prompt):
++def generate_images(seed,prompt,steps,n_samples):
 +    imgs = run_txt2img(
 +        ckpt="/models/sd-2-1/model.ckpt",
 +        outdir="/cache/",
 +        H=768,
 +        W=768,
-+        steps=6,
++        steps=steps,
 +        n_iter=1,
 +        device="cuda",
-+        n_samples=4,
++        n_samples=n_samples,
 +        seed=seed,
 +        prompt=prompt,
 +        original_batch_size=-1,
@@ -539,8 +539,8 @@ index 0000000..b73d919
 +
 +# The WebSocket event for streaming the generated image
 +@socketio.on('request_image')
-+def stream_images(seed,prompt):
-+    imgs = generate_images(seed,prompt)
++def stream_images(seed,prompt,steps,n_samples):
++    imgs = generate_images(seed,prompt,steps,n_samples)
 +    for img in imgs:
 +        socketio.emit('image', img)
 +
