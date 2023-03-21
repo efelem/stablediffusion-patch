@@ -161,7 +161,7 @@ index 637363d..6175124 100644
 +    
 \ No newline at end of file
 diff --git a/scripts/txt2img.py b/scripts/txt2img.py
-index 9d955e3..43d44e5 100644
+index 9d955e3..6138241 100644
 --- a/scripts/txt2img.py
 +++ b/scripts/txt2img.py
 @@ -1,3 +1,4 @@
@@ -290,13 +290,14 @@ index 9d955e3..43d44e5 100644
  
                      x_samples = model.decode_first_stage(samples)
                      x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
-@@ -382,6 +424,179 @@ def main(opt):
+@@ -382,6 +424,180 @@ def main(opt):
      print(f"Your samples are ready and waiting for you here: \n{outpath} \n"
            f" \nEnjoy.")
  
 +model = None
 +
 +def txt2img(opt):
++    global model
 +    seed_everything(opt.seed)
 +    if model is None:
 +        config = OmegaConf.load(f"{opt.config}")
