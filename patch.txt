@@ -469,7 +469,7 @@ index 9d955e3..8dbcc15 100644
      opt = parse_args()
 diff --git a/scripts/websocket.py b/scripts/websocket.py
 new file mode 100644
-index 0000000..e9e3a66
+index 0000000..b73d919
 --- /dev/null
 +++ b/scripts/websocket.py
 @@ -0,0 +1,77 @@
@@ -542,7 +542,7 @@ index 0000000..e9e3a66
 +def stream_images(seed,prompt):
 +    imgs = generate_images(seed,prompt)
 +    for img in imgs:
-+        socketio.emit('image', img, binary=True)
++        socketio.emit('image', img)
 +
 +if __name__ == "__main__":
 +    parser = ArgumentParser()
