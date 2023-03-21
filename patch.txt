@@ -469,7 +469,7 @@ index 9d955e3..8dbcc15 100644
      opt = parse_args()
 diff --git a/scripts/websocket.py b/scripts/websocket.py
 new file mode 100644
-index 0000000..2c153ed
+index 0000000..e9e3a66
 --- /dev/null
 +++ b/scripts/websocket.py
 @@ -0,0 +1,77 @@
@@ -512,7 +512,7 @@ index 0000000..2c153ed
 +        bf16=False
 +    )
 +
-+    txt2img(args)
++    return txt2img(args)
 +
 +app = Flask(__name__)
 +#app.config["SECRET_KEY"] = "nCt9dIHxmiippDbcm5WlsV9Lk3MB0k"
