@@ -469,7 +469,7 @@ index 9d955e3..8dbcc15 100644
      opt = parse_args()
 diff --git a/scripts/websocket.py b/scripts/websocket.py
 new file mode 100644
-index 0000000..de5a532
+index 0000000..255d599
 --- /dev/null
 +++ b/scripts/websocket.py
 @@ -0,0 +1,77 @@
@@ -495,9 +495,9 @@ index 0000000..de5a532
 +        target_index=int(target_index),
 +        negative_prompt=negative_prompt,
 +        # Set other parameters to their default values or your desired values
-+        plms=False,
-+        dpm=False,
-+        fixed_code=False,
++        # plms=False,
++        # dpm=False,
++        # fixed_code=False,
 +        ddim_eta=0.0,
 +        C=4,
 +        f=8,
@@ -507,9 +507,9 @@ index 0000000..de5a532
 +        config="configs/stable-diffusion/v2-inference.yaml",
 +        precision="autocast",
 +        repeat=1,
-+        torchscript=False,
-+        ipex=False,
-+        bf16=False
++        # torchscript=False,
++        # ipex=False,
++        # bf16=False
 +    )
 +
 +    return txt2img(args)
