@@ -113,6 +113,40 @@ index 637363d..3732276 100644
 +    else:
 +        raise ValueError("You cannot have target_index set when batch_size > 1")
 \ No newline at end of file
+diff --git a/scripts/img2img.py b/scripts/img2img.py
+index 9085ba9..2d5092c 100644
+--- a/scripts/img2img.py
++++ b/scripts/img2img.py
+@@ -1,6 +1,8 @@
+ """make variations of input image"""
+ 
+ import argparse, os
++import urllib.parse
++import urllib.request
+ import PIL
+ import torch
+ import numpy as np
+@@ -47,6 +49,11 @@ def load_model_from_config(config, ckpt, verbose=False):
+ 
+ 
+ def load_img(path):
++    if urllib.parse.urlparse(path).scheme:
++        # If `path` is a URL
++        filename = os.path.basename(path)
++        urllib.request.urlretrieve(path, filename)
++        path = filename
+     image = Image.open(path).convert("RGB")
+     w, h = image.size
+     print(f"loaded input image of size ({w}, {h}) from {path}")
+@@ -73,7 +80,7 @@ def main():
+         "--init-img",
+         type=str,
+         nargs="?",
+-        help="path to the input image"
++        help="path or url to the input image"
+     )
+ 
+     parser.add_argument(
 diff --git a/scripts/txt2img.py b/scripts/txt2img.py
 index 9d955e3..586a731 100644
 --- a/scripts/txt2img.py
