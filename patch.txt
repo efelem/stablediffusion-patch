@@ -161,7 +161,7 @@ index 637363d..6175124 100644
 +    
 \ No newline at end of file
 diff --git a/scripts/img2img.py b/scripts/img2img.py
-index 9085ba9..5da7371 100644
+index 9085ba9..f6606e0 100644
 --- a/scripts/img2img.py
 +++ b/scripts/img2img.py
 @@ -1,6 +1,8 @@
@@ -188,7 +188,7 @@ index 9085ba9..5da7371 100644
 +            filename = os.path.basename("https://chatgenius.1motion.ch/static/media/picture_test.png")
 +            urllib.request.urlretrieve(path, filename)
 +            path = filename
-+            
++    assert os.path.isfile(path)
      image = Image.open(path).convert("RGB")
      w, h = image.size
      print(f"loaded input image of size ({w}, {h}) from {path}")
@@ -213,7 +213,7 @@ index 9085ba9..5da7371 100644
      )
  
      parser.add_argument(
-@@ -213,6 +235,8 @@ def main():
+@@ -213,12 +235,13 @@ def main():
              data = f.read().splitlines()
              data = list(chunk(data, batch_size))
  
@@ -222,7 +222,13 @@ index 9085ba9..5da7371 100644
      sample_path = os.path.join(outpath, "samples")
      os.makedirs(sample_path, exist_ok=True)
      base_count = len(os.listdir(sample_path))
-@@ -238,7 +262,7 @@ def main():
+     grid_count = len(os.listdir(outpath)) - 1
+ 
+-    assert os.path.isfile(opt.init_img)
+     init_image = load_img(opt.init_img).to(device)
+     init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
+     init_latent = model.get_first_stage_encoding(model.encode_first_stage(init_image))  # move to latent space
+@@ -238,7 +261,7 @@ def main():
                      for prompts in tqdm(data, desc="data"):
                          uc = None
                          if opt.scale != 1.0:
