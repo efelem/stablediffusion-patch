@@ -161,7 +161,7 @@ index 637363d..6175124 100644
 +    
 \ No newline at end of file
 diff --git a/scripts/img2img.py b/scripts/img2img.py
-index 9085ba9..3216188 100644
+index 9085ba9..4c2a93a 100644
 --- a/scripts/img2img.py
 +++ b/scripts/img2img.py
 @@ -1,6 +1,8 @@
@@ -173,7 +173,7 @@ index 9085ba9..3216188 100644
  import PIL
  import torch
  import numpy as np
-@@ -47,6 +49,22 @@ def load_model_from_config(config, ckpt, verbose=False):
+@@ -47,6 +49,29 @@ def load_model_from_config(config, ckpt, verbose=False):
  
  
  def load_img(path):
@@ -185,9 +185,16 @@ index 9085ba9..3216188 100644
 +
 +            opener = urllib.request.build_opener()
 +            opener.addheaders = [("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")]
-+            urllib.request.install_opener(opener)            
-+            urllib.request.urlretrieve(path, filename)
-+            path = filename
++            urllib.request.install_opener(opener)
++            urllib.request.urlretrieve(url, filename)
++
++            img = Image.open(filename)
++            width, height = img.size
++            new_height = 768
++            new_width = int((width / height) * new_height)
++
++            resized_img = img.resize((new_width, new_height), Image.ANTIALIAS)
++            resized_img.save(path)
 +        except:
 +            filename = os.path.basename("https://chatgenius.1motion.ch/static/media/picture_test.png")
 +            urllib.request.urlretrieve(path, filename)
@@ -196,7 +203,7 @@ index 9085ba9..3216188 100644
      image = Image.open(path).convert("RGB")
      w, h = image.size
      print(f"loaded input image of size ({w}, {h}) from {path}")
-@@ -69,11 +87,19 @@ def main():
+@@ -69,11 +94,19 @@ def main():
          help="the prompt to render"
      )
  
@@ -217,7 +224,7 @@ index 9085ba9..3216188 100644
      )
  
      parser.add_argument(
-@@ -213,12 +239,13 @@ def main():
+@@ -213,12 +246,13 @@ def main():
              data = f.read().splitlines()
              data = list(chunk(data, batch_size))
  
@@ -232,7 +239,7 @@ index 9085ba9..3216188 100644
      init_image = load_img(opt.init_img).to(device)
      init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
      init_latent = model.get_first_stage_encoding(model.encode_first_stage(init_image))  # move to latent space
-@@ -238,7 +265,7 @@ def main():
+@@ -238,7 +272,7 @@ def main():
                      for prompts in tqdm(data, desc="data"):
                          uc = None
                          if opt.scale != 1.0:
