@@ -160,6 +160,70 @@ index 637363d..6175124 100644
 +    
 +    
 \ No newline at end of file
+diff --git a/scripts/img2img.py b/scripts/img2img.py
+index 9085ba9..9948c2d 100644
+--- a/scripts/img2img.py
++++ b/scripts/img2img.py
+@@ -1,6 +1,8 @@
+ """make variations of input image"""
+ 
+ import argparse, os
++import urllib.parse
++import urllib.request
+ import PIL
+ import torch
+ import numpy as np
+@@ -47,6 +49,11 @@ def load_model_from_config(config, ckpt, verbose=False):
+ 
+ 
+ def load_img(path):
++    if urllib.parse.urlparse(path).scheme:
++        # If `path` is a URL
++        filename = os.path.basename(path)
++        urllib.request.urlretrieve(path, filename)
++        path = filename
+     image = Image.open(path).convert("RGB")
+     w, h = image.size
+     print(f"loaded input image of size ({w}, {h}) from {path}")
+@@ -69,11 +76,19 @@ def main():
+         help="the prompt to render"
+     )
+ 
++    parser.add_argument(
++        "--negative_prompt",
++        type=str,
++        nargs="?",
++        default="ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, ugly, blurry, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, out of frame, ugly, extra limbs, bad anatomy, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, mutated hands, fused fingers, too many fingers, long neck",
++        help="the prompt not to render"
++    )
++
+     parser.add_argument(
+         "--init-img",
+         type=str,
+         nargs="?",
+-        help="path to the input image"
++        help="path or url to the input image"
+     )
+ 
+     parser.add_argument(
+@@ -213,6 +228,8 @@ def main():
+             data = f.read().splitlines()
+             data = list(chunk(data, batch_size))
+ 
++    negative_prompt = opt.negative_prompt
++    print("Negative prompts: {}".format(negative_prompt))
+     sample_path = os.path.join(outpath, "samples")
+     os.makedirs(sample_path, exist_ok=True)
+     base_count = len(os.listdir(sample_path))
+@@ -238,7 +255,7 @@ def main():
+                     for prompts in tqdm(data, desc="data"):
+                         uc = None
+                         if opt.scale != 1.0:
+-                            uc = model.get_learned_conditioning(batch_size * [""])
++                            uc = model.get_learned_conditioning(batch_size * [negative_prompt])
+                         if isinstance(prompts, tuple):
+                             prompts = list(prompts)
+                         c = model.get_learned_conditioning(prompts)
 diff --git a/scripts/txt2img.py b/scripts/txt2img.py
 index 9d955e3..490143c 100644
 --- a/scripts/txt2img.py
